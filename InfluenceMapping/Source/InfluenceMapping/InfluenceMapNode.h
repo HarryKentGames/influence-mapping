@@ -14,6 +14,7 @@ class INFLUENCEMAPPING_API UInfluenceMapNode : public UObject
 {
 	GENERATED_BODY()
 private:
+	UPROPERTY(VisibleAnywhere)
 	FVector coordinates;
 	int index;
 	TMap<UInfluenceMapNode*, float> neighbours;

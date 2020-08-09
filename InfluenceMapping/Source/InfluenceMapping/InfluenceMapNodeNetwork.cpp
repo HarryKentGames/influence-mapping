@@ -2,7 +2,6 @@
 
 
 #include "InfluenceMapNodeNetwork.h"
-#include "DrawDebugHelpers.h"
 
 // Sets default values for this component's properties
 UInfluenceMapNodeNetwork::UInfluenceMapNodeNetwork()
@@ -20,24 +19,6 @@ void UInfluenceMapNodeNetwork::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
-
-	GetRoomSize();
-	GenerateNetwork(navSys);
-	CreateMovementNetwork(navSys);
-
-	if (debugDraw)
-	{
-		for (UInfluenceMapNode* node : nodes)
-		{
-			DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, FColor(181, 0, 0), true);
-			for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
-			{
-				DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), FColor(181, 0, 0), true);
-			}
-		}
-	}
-
 	// ...
 	
 }
@@ -48,6 +29,26 @@ void UInfluenceMapNodeNetwork::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	// ...
+}
+
+TArray<UInfluenceMapNode*> UInfluenceMapNodeNetwork::GetNodes()
+{
+	return nodes;
+}
+
+float UInfluenceMapNodeNetwork::GetResolution()
+{
+	return resolution;
+}
+
+TArray<UInfluenceMapNode*> UInfluenceMapNodeNetwork::CreateNetwork()
+{
+	const UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	GetRoomSize();
+	GenerateNetwork(navSys);
+	CreateMovementNetwork(navSys);
+	return nodes;
 }
 
 void UInfluenceMapNodeNetwork::GetRoomSize()

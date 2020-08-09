@@ -23,9 +23,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	float resolution;
 
-	UPROPERTY(EditAnywhere)
-	bool debugDraw;
-
 	TArray<UInfluenceMapNode*> nodes;
 
 	FVector bottomLeft;
@@ -45,5 +42,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	TArray<UInfluenceMapNode*> CreateNetwork();
+	TArray<UInfluenceMapNode*> GetNodes();
+	float GetResolution();		
 };
