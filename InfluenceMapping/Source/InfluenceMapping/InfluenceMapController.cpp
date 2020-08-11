@@ -32,9 +32,6 @@ void UInfluenceMapController::BeginPlay()
 	Super::BeginPlay();
 
     InitialiseNodeNetwork();
-
-	FTimerHandle MyTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(MyTimerHandle, this, &UInfluenceMapController::DebugDraw, 2.0f, true, 2.0f);
 }
 
 
@@ -45,6 +42,7 @@ void UInfluenceMapController::TickComponent(float DeltaTime, ELevelTick TickType
 
 	UpdatePropagators();
 	PropagateInfluences();
+	DebugDraw();
 }
 
 TArray<UInfluenceMapNode*> UInfluenceMapController::GetNodes()
@@ -81,6 +79,11 @@ void UInfluenceMapController::RemovePropagator(UInfluenceMapPropagator* propagat
 	propagators.Remove(propagatorToRemove);
 }
 
+UInfluenceMapNodeNetwork* UInfluenceMapController::GetNodeNetwork()
+{
+	return nodeNetwork;
+}
+
 void UInfluenceMapController::InitialiseNodeNetwork()
 {
 	nodeNetwork = this->GetOwner()->FindComponentByClass<UInfluenceMapNodeNetwork>();
@@ -105,6 +108,7 @@ void UInfluenceMapController::PropagateInfluences()
 
 void UInfluenceMapController::DebugDraw()
 {
+	float total = 0.0f;
 	if (propagators.Num() > 0 && debugDraw)
 	{
 		FColor red = FColor(255, 0, 0);
@@ -114,12 +118,13 @@ void UInfluenceMapController::DebugDraw()
 		{
 			FColor color = FColor();
 			color = FLinearColor::LerpUsingHSV(red, green, propagators[0]->GetInfluenceMap()[node->GetIndex()]).ToFColor(true);
-			DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 2.0f);
+			total += propagators[0]->GetInfluenceMap()[node->GetIndex()];
+			DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.5f);
 			for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
 			{
 				float averageInfluence = (propagators[0]->GetInfluenceMap()[node->GetIndex()] + propagators[0]->GetInfluenceMap()[neighbour.Key->GetIndex()]) / 2;
 				color = FLinearColor::LerpUsingHSV(red, green, averageInfluence).ToFColor(true);
-				DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), color, false, 2.0f);
+				DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), color, false, 0.5f);
 			}
 		}
 	}

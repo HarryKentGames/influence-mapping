@@ -49,36 +49,32 @@ void UInfluenceMapPropagator::UpdatePropagator()
 
 void UInfluenceMapPropagator::PropagateInfluenceMap()
 {
+	std::map<UInfluenceMapNode*, float> unvisitedNodes = std::map<UInfluenceMapNode*, float>();
 	std::map<UInfluenceMapNode*, float> visitedNodes = std::map<UInfluenceMapNode*, float>();
 	std::vector<float> influenceMapBuffer = std::vector<float>(influenceMap.size());
-	PropagateInfluence(currentNode, 0.0f, influenceMapBuffer, visitedNodes);
-	SetInfluenceMap(influenceMapBuffer);
-}
 
-void UInfluenceMapPropagator::PropagateInfluence(UInfluenceMapNode* node, float totalDistance, std::vector<float> &influenceMapBuffer, std::map<UInfluenceMapNode*, float> &visitedNodes)
-{
-	//If the node is out of range, stop:
-	if (totalDistance > influenceRange || node == nullptr)
+	unvisitedNodes[currentNode] = 0.0f;
+
+	while (unvisitedNodes.size() > 0)
 	{
-		return;
-	}
-	//Calculate the influence for the node, and update the map:
-	float influence = 1 - (1 * (totalDistance / influenceRange));
-	visitedNodes[node] = influence;
-	influenceMapBuffer[node->GetIndex()] = influence;
-	//Loop over all the neighbours:
-	for (TPair<UInfluenceMapNode*, float> neighbourPair : node->GetNeighbours())
-	{
-		UInfluenceMapNode* neighbourNode = neighbourPair.Key;
-		float distance = neighbourPair.Value;
-		float neighbourInfluence = 1 - (1 * (totalDistance / influenceRange));
-		bool neighbourVisited = visitedNodes.find(neighbourNode) != visitedNodes.end();
-		//If the neighbour hasnt been visited, or its new influence would be lower, propogate influence for the neighbour:
-		if (!neighbourVisited || (neighbourVisited && visitedNodes[neighbourNode] < neighbourInfluence))
+		std::map<UInfluenceMapNode*, float>::iterator firstElement = unvisitedNodes.begin();
+		UInfluenceMapNode* node = firstElement->first;
+		float distance = firstElement->second;
+		influenceMapBuffer[node->GetIndex()] = 1.0f - (1.0f * (distance / influenceRange));
+		visitedNodes[node] = distance;
+		for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
 		{
-			PropagateInfluence(neighbourNode, totalDistance + distance, influenceMapBuffer, visitedNodes);
+			bool inVisited = visitedNodes.find(neighbour.Key) != visitedNodes.end();
+			bool inUnvisited = unvisitedNodes.find(neighbour.Key) != unvisitedNodes.end();
+			float neighbourDistance = distance + neighbour.Value;
+			if (((inVisited && visitedNodes[neighbour.Key] > neighbourDistance) || (inUnvisited && unvisitedNodes[neighbour.Key] > neighbourDistance) || (!inVisited && !inUnvisited)) && neighbourDistance <= influenceRange)
+			{
+				unvisitedNodes[neighbour.Key] = neighbourDistance;
+			}
 		}
+		unvisitedNodes.erase(node);
 	}
+	SetInfluenceMap(influenceMapBuffer);
 }
 
 float UInfluenceMapPropagator::GetInfluenceRange()

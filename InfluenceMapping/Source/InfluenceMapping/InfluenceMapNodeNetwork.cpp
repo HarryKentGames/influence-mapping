@@ -140,22 +140,26 @@ void UInfluenceMapNodeNetwork::CreateMovementNetwork(const UNavigationSystemV1* 
 				FNavLocation navLocation = FNavLocation();
 				FVector queryExtents = FVector(100.0f, 100.0f, 100.0f);
 				navSys->ProjectPointToNavigation(neighbourPosition, navLocation, queryExtents);
+				UInfluenceMapNode** neighbourNode = nodes.FindByPredicate([navLocation](UInfluenceMapNode*& item)
+				{
+					return item->GetCoordinates() == navLocation;
+				});
 				//If the location on the nav mesh lines up with the expected location:
-				if (neighbourPosition.X == navLocation.Location.X && neighbourPosition.Y == navLocation.Location.Y)
+				if (neighbourNode)
 				{
 					//Get the length of path between the two points:
-					float pathLength = navSys->FindPathToLocationSynchronously(GetWorld(), position, navLocation)->GetPathLength();
-					//If the length between the nodes is less than the actual distance, link the nodes, if they arent already:
-					if (pathLength <= FVector::Dist(navLocation, position) * 1.1f)
+					UNavigationPath* path = navSys->FindPathToLocationSynchronously(GetWorld(), position, (*neighbourNode)->GetCoordinates());
+					if (!path->IsPartial())
 					{
-						UInfluenceMapNode** neighbourNode = nodes.FindByPredicate([navLocation](UInfluenceMapNode*& item)
+						float pathLength = path->GetPathLength();
+						//If the length between the nodes is less than the actual distance, link the nodes, if they arent already:
+						if (pathLength <= FVector::Dist((*neighbourNode)->GetCoordinates(), position))
 						{
-							return item->GetCoordinates() == navLocation;
-						});
-						if (neighbourNode && !node->GetNeighbours().Contains(*neighbourNode))
-						{
-							(*neighbourNode)->AddNeighbour(node, pathLength);
-							node->AddNeighbour(*neighbourNode, pathLength);
+							if (!node->GetNeighbours().Contains(*neighbourNode))
+							{
+								(*neighbourNode)->AddNeighbour(node, pathLength);
+								node->AddNeighbour(*neighbourNode, pathLength);
+							}
 						}
 					}
 				}

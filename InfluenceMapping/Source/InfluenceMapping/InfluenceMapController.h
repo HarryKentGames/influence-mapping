@@ -20,16 +20,18 @@ class INFLUENCEMAPPING_API UInfluenceMapController : public USceneComponent
 	GENERATED_BODY()
 private:
 	UInfluenceMapNodeNetwork* nodeNetwork;
+	UPROPERTY(VisibleAnywhere)
 	TArray<UInfluenceMapNode*> nodes;
 	TArray<UInfluenceMapPropagator*> propagators;
 
 	void InitialiseNodeNetwork();
 	void UpdatePropagators();
-	void PropagateInfluences();
 
 public:
 	UPROPERTY(EditAnywhere)
 	bool debugDraw;
+
+	void PropagateInfluences();
 
 	// Sets default values for this component's properties
 	UInfluenceMapController();
@@ -47,6 +49,8 @@ public:
 	UInfluenceMapNode* GetClosestNode(FVector coordinates);
 	void AddPropagator(UInfluenceMapPropagator* propagatorToAdd);
 	void RemovePropagator(UInfluenceMapPropagator* propagatorToRemove);
+
+	UInfluenceMapNodeNetwork* GetNodeNetwork();
 	
 	void DebugDraw();
 };

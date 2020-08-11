@@ -37,6 +37,4 @@ public:
 	float GetInfluenceRange();
 	void UpdatePropagator();
 	void PropagateInfluenceMap();
-	void PropagateInfluence(UInfluenceMapNode* node, float influence, std::vector<float>& influenceMapBuffer, std::map<UInfluenceMapNode*, float> &visitedNodes);
-
 };

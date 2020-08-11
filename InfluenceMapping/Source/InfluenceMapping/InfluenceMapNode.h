@@ -17,6 +17,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	FVector coordinates;
 	int index;
+	UPROPERTY(VisibleAnywhere)
 	TMap<UInfluenceMapNode*, float> neighbours;
 
 public:
