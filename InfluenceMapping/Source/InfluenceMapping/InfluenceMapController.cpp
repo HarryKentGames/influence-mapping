@@ -7,8 +7,6 @@ UInfluenceMapController::UInfluenceMapController()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 UInfluenceMapController* UInfluenceMapController::FindInstanceInWorld(UWorld* world)
@@ -31,6 +29,7 @@ void UInfluenceMapController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	targetPropagatorIndex = 0;
     InitialiseNodeNetwork();
 }
 
@@ -106,12 +105,64 @@ void UInfluenceMapController::PropagateInfluences()
 	}
 }
 
+void UInfluenceMapController::TargetNextPropagator()
+{
+	if (targetPropagatorIndex < propagators.Num() - 1)
+	{
+		targetPropagatorIndex++;
+	}
+	else
+	{
+		targetPropagatorIndex = 0;
+	}
+}
+
+void UInfluenceMapController::TargetPreviousPropagator()
+{
+	if (targetPropagatorIndex > 0)
+	{
+		targetPropagatorIndex--;
+	}
+	else
+	{
+		targetPropagatorIndex = propagators.Num() - 1;
+	}
+}
+
 void UInfluenceMapController::DebugDraw()
 {
-	if (propagators.Num() > 0 && debugDraw)
+	if (propagators.Num() > targetPropagatorIndex)
 	{
 		std::vector<float> influenceMap = std::vector<float>(nodes.Num());
-		GetVulnerabilityMap(propagators[0], influenceMap);
+		if (debugMapType == DebugMapType::Propagator)
+		{
+			GetPropagatorInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+		else if (debugMapType == DebugMapType::PropagatorAlly)
+		{
+			GetPropagatorAllyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+		else if (debugMapType == DebugMapType::PropagatorEnemy)
+		{
+			GetPropagatorEnemyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+		else if (debugMapType == DebugMapType::CompleteMap)
+		{
+			GetCompleteInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+
+		else if (debugMapType == DebugMapType::TensionMap)
+		{
+			GetTensionMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+		else if (debugMapType == DebugMapType::PropagatorVulnerabilityMap)
+		{
+			GetVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+		}
+		else if (debugMapType == DebugMapType::PropagatorDirectedVulnerabilityMap)
+		{
+			GetDirectedVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+		}
 		NormaliseInfluenceMap(influenceMap);
 		FColor red = FColor(255, 0, 0);
 		FColor lightRed = FColor(255, 100, 100);

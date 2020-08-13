@@ -14,6 +14,18 @@
 
 class UInfluenceMapPropagator;
 
+UENUM()
+enum DebugMapType
+{
+	Propagator     UMETA(DisplayName = "Propagator"),
+	PropagatorAlly      UMETA(DisplayName = "Propagator Ally"),
+	PropagatorEnemy      UMETA(DisplayName = "Propagator Enemy"),
+	CompleteMap      UMETA(DisplayName = "Complete Map"),
+	TensionMap      UMETA(DisplayName = "Tension Map"),
+	PropagatorVulnerabilityMap      UMETA(DisplayName = "Propagator Vulnerability Map"),
+	PropagatorDirectedVulnerabilityMap      UMETA(DisplayName = "Propagator Directed Vulnerability Map"),
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class INFLUENCEMAPPING_API UInfluenceMapController : public USceneComponent
 {
@@ -27,11 +39,16 @@ private:
 	void InitialiseNodeNetwork();
 	void UpdatePropagators();
 
+	int targetPropagatorIndex;
+
 public:
+
 	UPROPERTY(EditAnywhere)
-	bool debugDraw;
+	TEnumAsByte<DebugMapType> debugMapType;
 
 	void PropagateInfluences();
+	void TargetNextPropagator();
+	void TargetPreviousPropagator();
 
 	// Sets default values for this component's properties
 	UInfluenceMapController();
