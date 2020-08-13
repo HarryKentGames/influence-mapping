@@ -108,26 +108,147 @@ void UInfluenceMapController::PropagateInfluences()
 
 void UInfluenceMapController::DebugDraw()
 {
-	float total = 0.0f;
 	if (propagators.Num() > 0 && debugDraw)
 	{
+		std::vector<float> influenceMap = std::vector<float>(nodes.Num());
+		GetVulnerabilityMap(propagators[0], influenceMap);
+		NormaliseInfluenceMap(influenceMap);
 		FColor red = FColor(255, 0, 0);
+		FColor lightRed = FColor(255, 100, 100);
 		FColor green = FColor(0, 255, 0);
-		FColor black = FColor(0, 0, 0);
+		FColor lightGreen = FColor(100, 255, 100);
 		for (UInfluenceMapNode* node : nodes)
 		{
 			FColor color = FColor();
-			color = FLinearColor::LerpUsingHSV(red, green, propagators[0]->GetInfluenceMap()[node->GetIndex()]).ToFColor(true);
-			total += propagators[0]->GetInfluenceMap()[node->GetIndex()];
-			DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.5f);
-			for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
+			if (influenceMap[node->GetIndex()] != 0.0f)
 			{
-				float averageInfluence = (propagators[0]->GetInfluenceMap()[node->GetIndex()] + propagators[0]->GetInfluenceMap()[neighbour.Key->GetIndex()]) / 2;
-				color = FLinearColor::LerpUsingHSV(red, green, averageInfluence).ToFColor(true);
-				DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), color, false, 0.5f);
+				if (influenceMap[node->GetIndex()] > 0.0f)
+				{
+					color = FLinearColor::LerpUsingHSV(lightGreen, green, influenceMap[node->GetIndex()]).ToFColor(false);
+				}
+				else
+				{
+					color = FLinearColor::LerpUsingHSV(lightRed, red, abs(influenceMap[node->GetIndex()])).ToFColor(false);
+				}
+				DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.5f);
+				/*for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
+				{
+					if (influenceMap[node->GetIndex()] != 0.0f && influenceMap[neighbour.Key->GetIndex() != 0.0f])
+					{
+						float averageInfluence = (influenceMap[node->GetIndex()] + influenceMap[neighbour.Key->GetIndex()]) / 2;
+						if (averageInfluence != 0.0f)
+						{
+							if (averageInfluence > 0.0f)
+							{
+								color = FLinearColor::LerpUsingHSV(lightGreen, green, influenceMap[node->GetIndex()]).ToFColor(false);
+							}
+							else
+							{
+								color = FLinearColor::LerpUsingHSV(lightRed, red, abs(influenceMap[node->GetIndex()])).ToFColor(false);
+							}
+							DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), color, false, 0.5f);
+						}
+					}
+				}*/
 			}
 		}
 	}
 }
 
+void UInfluenceMapController::NormaliseInfluenceMap(std::vector<float>& influenceMap)
+{
+	float maxValue = *std::max_element(influenceMap.begin(), influenceMap.end());
+	float minValue = *std::min_element(influenceMap.begin(), influenceMap.end());
+	maxValue = abs(minValue) > maxValue ? abs(minValue) :maxValue;
+	for (int i = 0; i < influenceMap.size(); i++)
+	{
+		if (influenceMap[i] != 0)
+		{
+			influenceMap[i] /= maxValue;
+		}
+	}
+}
+
+void UInfluenceMapController::GetPropagatorInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+{
+	influenceMap = propagator->GetInfluenceMap();
+}
+
+void UInfluenceMapController::GetPropagatorAllyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+{
+	for (UInfluenceMapPropagator* p : propagators)
+	{
+		if (propagator->GetTeam() == p->GetTeam())
+		{
+			std::vector<float> pInfluenceMap = p->GetInfluenceMap();
+			for (int i = 0; i < influenceMap.size(); i++)
+			{
+				influenceMap[i] += pInfluenceMap[i];
+			}
+		}
+	}
+}
+
+void UInfluenceMapController::GetPropagatorEnemyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap)
+{
+	for (UInfluenceMapPropagator* p : propagators)
+	{
+		if (propagator->GetTeam() != p->GetTeam())
+		{
+			std::vector<float> pInfluenceMap = p->GetInfluenceMap();
+			for (int i = 0; i < influenceMap.size(); i++)
+			{
+				influenceMap[i] += pInfluenceMap[i];
+			}
+		}
+	}
+}
+
+void UInfluenceMapController::GetCompleteInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap)
+{
+	std::vector<float> allyInfluenceMap = std::vector<float>(influenceMap.size());
+	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap);
+	std::vector<float> enemyInfluenceMap = std::vector<float>(influenceMap.size());
+	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap);
+	for (int i = 0; i < influenceMap.size(); i++)
+	{
+		influenceMap[i] = allyInfluenceMap[i] - enemyInfluenceMap[i];
+	}
+}
+
+void UInfluenceMapController::GetTensionMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+{
+	std::vector<float> allyInfluenceMap = std::vector<float>(influenceMap.size());
+	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap);
+	std::vector<float> enemyInfluenceMap = std::vector<float>(influenceMap.size());
+	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap);
+	for (int i = 0; i < influenceMap.size(); i++)
+	{
+		influenceMap[i] = allyInfluenceMap[i] + enemyInfluenceMap[i];
+	}
+}
+
+void UInfluenceMapController::GetVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+{
+	std::vector<float> tensionMap = std::vector<float>(influenceMap.size());
+	GetTensionMap(propagator, tensionMap);
+	std::vector<float> completeInfluenceMap = std::vector<float>(influenceMap.size());
+	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
+	for (int i = 0; i < influenceMap.size(); i++)
+	{
+		influenceMap[i] = tensionMap[i] - abs(completeInfluenceMap[i]);
+	}
+}
+
+void UInfluenceMapController::GetDirectedVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+{
+	std::vector<float> tensionMap = std::vector<float>(influenceMap.size());
+	GetTensionMap(propagator, tensionMap);
+	std::vector<float> completeInfluenceMap = std::vector<float>(influenceMap.size());
+	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
+	for (int i = 0; i < influenceMap.size(); i++)
+	{
+		influenceMap[i] = tensionMap[i] + abs(completeInfluenceMap[i]);
+	}
+}
 

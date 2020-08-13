@@ -82,3 +82,8 @@ float UInfluenceMapPropagator::GetInfluenceRange()
 	return influenceRange;
 }
 
+Team UInfluenceMapPropagator::GetTeam()
+{
+	return team;
+}
+

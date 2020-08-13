@@ -51,6 +51,15 @@ public:
 	void RemovePropagator(UInfluenceMapPropagator* propagatorToRemove);
 
 	UInfluenceMapNodeNetwork* GetNodeNetwork();
+
+	void NormaliseInfluenceMap(std::vector<float>& influenceMap);
+	void GetPropagatorInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetPropagatorAllyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetPropagatorEnemyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetCompleteInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetTensionMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
+	void GetDirectedVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
 	
 	void DebugDraw();
 };
