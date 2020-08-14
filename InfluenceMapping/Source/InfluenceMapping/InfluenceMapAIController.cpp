@@ -22,8 +22,10 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
     {
         std::vector<int> usableIndices = std::vector<int>();
         propagator->influenceMapController->GetPropagatorEnemyInfluenceMap(propagator, currentInfluenceMap);
+        //If the agent is out of range of its enemy:
         if (currentNode->GetIndex() < currentInfluenceMap.size() && currentInfluenceMap[currentNode->GetIndex()] < 0.9f && atLocation)
         {
+            //Find all points in range:
             for (std::vector<float>::iterator it = currentInfluenceMap.begin(); it != currentInfluenceMap.end(); ++it)
             {
                 if (*it > 0.9f)
@@ -31,6 +33,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
                     usableIndices.push_back(it - currentInfluenceMap.begin());
                 }
             }
+            //Move to a random point in range:
             TArray<UInfluenceMapNode*> nodes = propagator->influenceMapController->GetNodes();
             FVector location = nodes[usableIndices[rand() % usableIndices.size()]]->GetCoordinates();
             Super::MoveToLocation(location, 20.0f, true, true, true, true);
@@ -41,8 +44,10 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
     {
         std::vector<int> usableIndices = std::vector<int>();
         propagator->influenceMapController->GetVulnerabilityMap(propagator, currentInfluenceMap);
+        //If the agent is in a vulnerable space:
         if (currentNode->GetIndex() < currentInfluenceMap.size() && currentInfluenceMap[currentNode->GetIndex()] > 0.0f && atLocation)
         {
+            //Find all the points which are not vulnerable:
             for (std::vector<float>::iterator it = currentInfluenceMap.begin(); it != currentInfluenceMap.end(); ++it)
             {
                 if (*it <= 0.0f)
@@ -50,6 +55,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
                     usableIndices.push_back(it - currentInfluenceMap.begin());
                 }
             }
+            //Move to a random point that is not vulnerable:
             TArray<UInfluenceMapNode*> nodes = propagator->influenceMapController->GetNodes();
             FVector location = nodes[usableIndices[rand() % usableIndices.size()]]->GetCoordinates();
             Super::MoveToLocation(location, 20.0f, true, true, true, true);

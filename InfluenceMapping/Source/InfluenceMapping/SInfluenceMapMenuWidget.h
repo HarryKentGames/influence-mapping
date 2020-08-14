@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
+#include "InfluenceMapHUD.h"
 #include "SlateBasics.h"
 #include "SlateExtras.h"
 
@@ -15,20 +14,15 @@ public:
 
 	SLATE_END_ARGS()
 
+	TWeakObjectPtr<class AInfluenceMapHUD> OwningHUD;
+	
 	void Construct(const FArguments& InArgs);
 
-	FReply OnNextPropagatorClicked() const;
-	FReply OnPreviousPropagatorClicked() const;
-	FReply OnPropagatorInfluencesClicked() const;
-	FReply OnPropagatorAllyInfluencesClicked() const;
-	FReply OnPropagatorEnemyInfluencesClicked() const;
-	FReply OnCompleteInfluencesClicked() const;
-	FReply OnTensionMapClicked() const;
-	FReply OnVulnerabilityClicked() const;
-	FReply OnDirectedVulnerabilityClicked() const;
+	//Button Logics:
+	FReply OnTargetPropagatorChanged(int indexOffset) const;
+	FReply OnInfluenceMapSelected(DebugMapType mapType) const;
 	FReply OnCloseMenuClicked() const;
 
-	TWeakObjectPtr<class AInfluenceMapHUD> OwningHUD;
 
 	virtual bool SupportsKeyboardFocus() const override
 	{

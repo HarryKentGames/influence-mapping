@@ -1,12 +1,10 @@
 #include "SInfluenceMapMenuWidget.h"
-#include "InfluenceMapHUD.h"
 
 #define LOCTEXT_NAMESPACE "Menu"
 
 void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 {
 	bCanSupportFocus = true;
-
 	OwningHUD = InArgs._OwningHUD;
 
 	const FMargin contentPadding = FMargin(10.0f, 10.0f);
@@ -47,11 +45,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					.Justification(ETextJustify::Center)
 				]
 				
+				//Button to select the next propagator:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnNextPropagatorClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnTargetPropagatorChanged, 1)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -60,24 +59,26 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the previous propagator:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnPreviousPropagatorClicked)
-				[
-					SNew(STextBlock)
-					.Font(buttonTextStyle)
-					.Text(previousPropagatorText)
-					.Justification(ETextJustify::Center)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnTargetPropagatorChanged, -1)
+					[
+						SNew(STextBlock)
+						.Font(buttonTextStyle)
+						.Text(previousPropagatorText)
+						.Justification(ETextJustify::Center)
 					]
 				]
 
+				//Button to select the propagator's influence map:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnPropagatorInfluencesClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::Propagator)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -86,11 +87,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the propagator allies' influence maps:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnPropagatorAllyInfluencesClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::PropagatorAlly)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -99,11 +101,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the propagator enemies' influence maps:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnPropagatorEnemyInfluencesClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::PropagatorEnemy)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -112,11 +115,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the complete influence map:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnCompleteInfluencesClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::CompleteMap)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -125,11 +129,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the tension map:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnTensionMapClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::TensionMap)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -138,11 +143,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the propagator's vulnerability map:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnVulnerabilityClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::PropagatorVulnerabilityMap)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -151,11 +157,12 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to select the propagator's directed vulnerability map:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
 					SNew(SButton)
-					.OnClicked(this, &SInfluenceMapMenuWidget::OnDirectedVulnerabilityClicked)
+					.OnClicked(this, &SInfluenceMapMenuWidget::OnInfluenceMapSelected, DebugMapType::PropagatorDirectedVulnerabilityMap)
 					[
 						SNew(STextBlock)
 						.Font(buttonTextStyle)
@@ -164,6 +171,7 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 					]
 				]
 
+				//Button to close the menu:
 				+ SVerticalBox::Slot()
 				.Padding(buttonPadding)
 				[
@@ -180,109 +188,27 @@ void SInfluenceMapMenuWidget::Construct(const FArguments& InArgs)
 		];
 }
 
-FReply SInfluenceMapMenuWidget::OnNextPropagatorClicked() const
+//Button Logics:
+
+FReply SInfluenceMapMenuWidget::OnTargetPropagatorChanged(int indexOffset) const
 {
 	if (OwningHUD.IsValid())
 	{
 		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
 		{
-			influenceMapController->TargetNextPropagator();
+			influenceMapController->TargetNewPropagator(indexOffset);
 		}
 	}
 	return FReply::Handled();
 }
 
-FReply SInfluenceMapMenuWidget::OnPreviousPropagatorClicked() const
+FReply SInfluenceMapMenuWidget::OnInfluenceMapSelected(DebugMapType mapType) const
 {
 	if (OwningHUD.IsValid())
 	{
 		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
 		{
-			influenceMapController->TargetPreviousPropagator();
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnPropagatorInfluencesClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::Propagator;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnPropagatorAllyInfluencesClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::PropagatorAlly;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnPropagatorEnemyInfluencesClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::PropagatorEnemy;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnCompleteInfluencesClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::CompleteMap;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnTensionMapClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::TensionMap;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnVulnerabilityClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::PropagatorVulnerabilityMap;
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply SInfluenceMapMenuWidget::OnDirectedVulnerabilityClicked() const
-{
-	if (OwningHUD.IsValid())
-	{
-		if (UInfluenceMapController* influenceMapController = OwningHUD->influenceMapController)
-		{
-			influenceMapController->debugMapType = DebugMapType::PropagatorDirectedVulnerabilityMap;
+			influenceMapController->debugMapType = mapType;
 		}
 	}
 	return FReply::Handled();

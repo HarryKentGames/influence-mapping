@@ -1,11 +1,8 @@
 #include "InfluenceMapController.h"
 #include "InfluenceMapPropagator.h"
 
-// Sets default values for this component's properties
 UInfluenceMapController::UInfluenceMapController()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
@@ -23,8 +20,6 @@ UInfluenceMapController* UInfluenceMapController::FindInstanceInWorld(UWorld* wo
 	return (*actor)->FindComponentByClass<UInfluenceMapController>();
 }
 
-
-// Called when the game starts
 void UInfluenceMapController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -33,8 +28,6 @@ void UInfluenceMapController::BeginPlay()
     InitialiseNodeNetwork();
 }
 
-
-// Called every frame
 void UInfluenceMapController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -105,25 +98,18 @@ void UInfluenceMapController::PropagateInfluences()
 	}
 }
 
-void UInfluenceMapController::TargetNextPropagator()
+void UInfluenceMapController::TargetNewPropagator(int indexOffset)
 {
-	if (targetPropagatorIndex < propagators.Num() - 1)
+	int newIndex = targetPropagatorIndex + indexOffset;
+	if (newIndex <= propagators.Num() - 1 && newIndex >= 0)
 	{
-		targetPropagatorIndex++;
+		targetPropagatorIndex = newIndex;
 	}
-	else
+	else if(newIndex > propagators.Num() - 1)
 	{
 		targetPropagatorIndex = 0;
 	}
-}
-
-void UInfluenceMapController::TargetPreviousPropagator()
-{
-	if (targetPropagatorIndex > 0)
-	{
-		targetPropagatorIndex--;
-	}
-	else
+	else if (newIndex < 0)
 	{
 		targetPropagatorIndex = propagators.Num() - 1;
 	}
@@ -134,40 +120,36 @@ void UInfluenceMapController::DebugDraw()
 	if (propagators.Num() > targetPropagatorIndex)
 	{
 		std::vector<float> influenceMap = std::vector<float>(nodes.Num());
-		if (debugMapType == DebugMapType::Propagator)
-		{
-			GetPropagatorInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
-		}
-		else if (debugMapType == DebugMapType::PropagatorAlly)
-		{
-			GetPropagatorAllyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
-		}
-		else if (debugMapType == DebugMapType::PropagatorEnemy)
-		{
-			GetPropagatorEnemyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
-		}
-		else if (debugMapType == DebugMapType::CompleteMap)
-		{
-			GetCompleteInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
-		}
+		FColor orange = FColor(255, 69, 0);
+		FColor yellow = FColor(255, 255, 0);
+		FColor blue = FColor(0, 0, 255);
+		FColor cyan = FColor(0, 255, 255);
 
-		else if (debugMapType == DebugMapType::TensionMap)
+		switch (debugMapType)
 		{
-			GetTensionMap(propagators[targetPropagatorIndex], influenceMap);
-		}
-		else if (debugMapType == DebugMapType::PropagatorVulnerabilityMap)
-		{
-			GetVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
-		}
-		else if (debugMapType == DebugMapType::PropagatorDirectedVulnerabilityMap)
-		{
-			GetDirectedVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+			case DebugMapType::Propagator:
+				GetPropagatorInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::PropagatorAlly:
+				GetPropagatorAllyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::PropagatorEnemy:
+				GetPropagatorEnemyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::CompleteMap:
+				GetCompleteInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::TensionMap:
+				GetTensionMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::PropagatorVulnerabilityMap:
+				GetVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
+			case DebugMapType::PropagatorDirectedVulnerabilityMap:
+				GetDirectedVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+				break;
 		}
 		NormaliseInfluenceMap(influenceMap);
-		FColor red = FColor(255, 0, 0);
-		FColor lightRed = FColor(255, 100, 100);
-		FColor green = FColor(0, 255, 0);
-		FColor lightGreen = FColor(100, 255, 100);
 		for (UInfluenceMapNode* node : nodes)
 		{
 			FColor color = FColor();
@@ -175,32 +157,13 @@ void UInfluenceMapController::DebugDraw()
 			{
 				if (influenceMap[node->GetIndex()] > 0.0f)
 				{
-					color = FLinearColor::LerpUsingHSV(lightGreen, green, influenceMap[node->GetIndex()]).ToFColor(false);
+					color = FLinearColor::LerpUsingHSV(cyan, blue, influenceMap[node->GetIndex()]).ToFColor(false);
 				}
 				else
 				{
-					color = FLinearColor::LerpUsingHSV(lightRed, red, abs(influenceMap[node->GetIndex()])).ToFColor(false);
+					color = FLinearColor::LerpUsingHSV(yellow, orange, abs(influenceMap[node->GetIndex()])).ToFColor(false);
 				}
 				DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.5f);
-				/*for (TPair<UInfluenceMapNode*, float> neighbour : node->GetNeighbours())
-				{
-					if (influenceMap[node->GetIndex()] != 0.0f && influenceMap[neighbour.Key->GetIndex() != 0.0f])
-					{
-						float averageInfluence = (influenceMap[node->GetIndex()] + influenceMap[neighbour.Key->GetIndex()]) / 2;
-						if (averageInfluence != 0.0f)
-						{
-							if (averageInfluence > 0.0f)
-							{
-								color = FLinearColor::LerpUsingHSV(lightGreen, green, influenceMap[node->GetIndex()]).ToFColor(false);
-							}
-							else
-							{
-								color = FLinearColor::LerpUsingHSV(lightRed, red, abs(influenceMap[node->GetIndex()])).ToFColor(false);
-							}
-							DrawDebugLine(GetWorld(), node->GetCoordinates(), neighbour.Key->GetCoordinates(), color, false, 0.5f);
-						}
-					}
-				}*/
 			}
 		}
 	}
@@ -210,7 +173,7 @@ void UInfluenceMapController::NormaliseInfluenceMap(std::vector<float>& influenc
 {
 	float maxValue = *std::max_element(influenceMap.begin(), influenceMap.end());
 	float minValue = *std::min_element(influenceMap.begin(), influenceMap.end());
-	maxValue = abs(minValue) > maxValue ? abs(minValue) :maxValue;
+	maxValue = abs(minValue) > maxValue ? abs(minValue) : maxValue;
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		if (influenceMap[i] != 0)

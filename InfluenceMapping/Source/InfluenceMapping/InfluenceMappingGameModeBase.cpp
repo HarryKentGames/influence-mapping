@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "InfluenceMappingGameModeBase.h"
 #include "InfluenceMapHUD.h"
 #include "InfluenceMapPlayerController.h"
