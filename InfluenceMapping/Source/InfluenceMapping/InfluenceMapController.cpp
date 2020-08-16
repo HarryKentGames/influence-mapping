@@ -37,27 +37,14 @@ void UInfluenceMapController::TickComponent(float DeltaTime, ELevelTick TickType
 	DebugDraw();
 }
 
-TArray<UInfluenceMapNode*> UInfluenceMapController::GetNodes()
+TArray<UInfluenceMapNode*> UInfluenceMapController::GetNodes() const
 {
 	return nodes;
 }
 
-UInfluenceMapNode* UInfluenceMapController::GetClosestNode(FVector coordinates)
+UInfluenceMapNodeNetwork* UInfluenceMapController::GetNodeNetwork() const
 {
-    UInfluenceMapNode* closestNode = nullptr;
-    float minimumDistance = INT_MAX;
-    //for each node calculate the distance from the position to the node.
-    for (UInfluenceMapNode* node : nodes)
-    {
-        float dist = FVector::Dist(coordinates, node->GetCoordinates());
-        //if the distance is smaller than the current minimum distance, replace the closest node.
-        if (dist < minimumDistance)
-        {
-            closestNode = node;
-            minimumDistance = dist;
-        }
-    }
-    return closestNode;
+	return nodeNetwork;
 }
 
 void UInfluenceMapController::AddPropagator(UInfluenceMapPropagator* propagatorToAdd)
@@ -71,9 +58,22 @@ void UInfluenceMapController::RemovePropagator(UInfluenceMapPropagator* propagat
 	propagators.Remove(propagatorToRemove);
 }
 
-UInfluenceMapNodeNetwork* UInfluenceMapController::GetNodeNetwork()
+UInfluenceMapNode* UInfluenceMapController::GetClosestNode(FVector coordinates) const
 {
-	return nodeNetwork;
+	UInfluenceMapNode* closestNode = nullptr;
+	float minimumDistance = INT_MAX;
+	//for each node calculate the distance from the position to the node.
+	for (UInfluenceMapNode* node : nodes)
+	{
+		float dist = FVector::Dist(coordinates, node->GetCoordinates());
+		//if the distance is smaller than the current minimum distance, replace the closest node.
+		if (dist < minimumDistance)
+		{
+			closestNode = node;
+			minimumDistance = dist;
+		}
+	}
+	return closestNode;
 }
 
 void UInfluenceMapController::InitialiseNodeNetwork()
@@ -101,17 +101,15 @@ void UInfluenceMapController::PropagateInfluences()
 void UInfluenceMapController::TargetNewPropagator(int indexOffset)
 {
 	int newIndex = targetPropagatorIndex + indexOffset;
+	//If the new index is in the bounds of the list of propagators, update the target index:
 	if (newIndex <= propagators.Num() - 1 && newIndex >= 0)
 	{
 		targetPropagatorIndex = newIndex;
 	}
-	else if(newIndex > propagators.Num() - 1)
+	//Else loop around to either the start or the end, as needed:
+	else
 	{
-		targetPropagatorIndex = 0;
-	}
-	else if (newIndex < 0)
-	{
-		targetPropagatorIndex = propagators.Num() - 1;
+		targetPropagatorIndex = newIndex > propagators.Num() - 1 ? 0 : propagators.Num() - 1;
 	}
 }
 
@@ -125,6 +123,7 @@ void UInfluenceMapController::DebugDraw()
 		FColor blue = FColor(0, 0, 255);
 		FColor cyan = FColor(0, 255, 255);
 
+		//Get the influence map to display:
 		switch (debugMapType)
 		{
 			case DebugMapType::Propagator:
@@ -150,6 +149,8 @@ void UInfluenceMapController::DebugDraw()
 				break;
 		}
 		NormaliseInfluenceMap(influenceMap);
+
+		//Display all the nodes on the map, with colours representing their influence values:
 		for (UInfluenceMapNode* node : nodes)
 		{
 			FColor color = FColor();
@@ -163,7 +164,7 @@ void UInfluenceMapController::DebugDraw()
 				{
 					color = FLinearColor::LerpUsingHSV(yellow, orange, abs(influenceMap[node->GetIndex()])).ToFColor(false);
 				}
-				DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.5f);
+				DrawDebugPoint(GetWorld(), node->GetCoordinates(), 10, color, false, 0.0f);
 			}
 		}
 	}
@@ -171,9 +172,11 @@ void UInfluenceMapController::DebugDraw()
 
 void UInfluenceMapController::NormaliseInfluenceMap(std::vector<float>& influenceMap)
 {
+	//Calculate the maximum influence value in the map, taking into account negatives:
 	float maxValue = *std::max_element(influenceMap.begin(), influenceMap.end());
 	float minValue = *std::min_element(influenceMap.begin(), influenceMap.end());
 	maxValue = abs(minValue) > maxValue ? abs(minValue) : maxValue;
+	//Normalise all values in the map based on this maximum value:
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		if (influenceMap[i] != 0)
@@ -262,7 +265,7 @@ void UInfluenceMapController::GetDirectedVulnerabilityMap(UInfluenceMapPropagato
 	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
-		influenceMap[i] = tensionMap[i] + abs(completeInfluenceMap[i]);
+		influenceMap[i] = tensionMap[i] + completeInfluenceMap[i];
 	}
 }
 

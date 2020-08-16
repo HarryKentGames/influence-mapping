@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Math/Color.h"
 #include "TimerManager.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "InfluenceMapController.generated.h"
 
 class UInfluenceMapPropagator;
@@ -33,17 +34,19 @@ public:
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<DebugMapType> debugMapType;
 
+	UInfluenceMapController();
+
 	static UInfluenceMapController* FindInstanceInWorld(UWorld* world);
 
-	UInfluenceMapController();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UInfluenceMapNodeNetwork* GetNodeNetwork();
-	TArray<UInfluenceMapNode*> GetNodes();
-	UInfluenceMapNode* GetClosestNode(FVector coordinates);
+	//Getters and Setters:
+	UInfluenceMapNodeNetwork* GetNodeNetwork() const;
+	TArray<UInfluenceMapNode*> GetNodes() const;
 	void AddPropagator(UInfluenceMapPropagator* propagatorToAdd);
 	void RemovePropagator(UInfluenceMapPropagator* propagatorToRemove);
 	void TargetNewPropagator(int indexOffset);
+	UInfluenceMapNode* GetClosestNode(FVector coordinates) const;
 
 	void PropagateInfluences();
 
@@ -63,8 +66,9 @@ protected:
 
 private:
 	UInfluenceMapNodeNetwork* nodeNetwork;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TArray<UInfluenceMapNode*> nodes;
+	UPROPERTY()
 	TArray<UInfluenceMapPropagator*> propagators;
 	int targetPropagatorIndex;
 

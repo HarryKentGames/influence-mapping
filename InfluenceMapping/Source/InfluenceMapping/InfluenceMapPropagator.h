@@ -18,12 +18,11 @@ class INFLUENCEMAPPING_API UInfluenceMapPropagator : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	UInfluenceMapController* influenceMapController;
-	UInfluenceMapNode* currentNode;
-
 	UInfluenceMapPropagator();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UInfluenceMapController* GetInfluenceMapController();
+	UInfluenceMapNode* GetCurrentNode();
 	std::vector<float> GetInfluenceMap();
 	void SetInfluenceMap(std::vector<float> influenceMapToSet);
 	float GetInfluenceRange();
@@ -36,6 +35,9 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	UInfluenceMapController* influenceMapController;
+	UInfluenceMapNode* currentNode;
+
 	UPROPERTY(EditAnywhere)
 	float influenceRange;
 	UPROPERTY(EditAnywhere)

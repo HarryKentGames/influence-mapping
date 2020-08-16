@@ -15,6 +15,7 @@ public:
 	static UInfluenceMapNode* MAKE(FVector coordinates, int index);
 	void Init(FVector coordinateValue, int indexValue);
 
+	//Getters and Setters:
 	void SetCoordinates(FVector coordinates);
 	FVector GetCoordinates() const;
 	int GetIndex();

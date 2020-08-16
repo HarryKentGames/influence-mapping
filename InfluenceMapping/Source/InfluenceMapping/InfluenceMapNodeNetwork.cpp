@@ -124,11 +124,11 @@ void UInfluenceMapNodeNetwork::CreateMovementNetwork(const UNavigationSystemV1* 
 				FNavLocation navLocation = FNavLocation();
 				FVector queryExtents = FVector(100.0f, 100.0f, 100.0f);
 				navSys->ProjectPointToNavigation(neighbourPosition, navLocation, queryExtents);
+				//If the location on the nav mesh lines up with the expected location:
 				UInfluenceMapNode** neighbourNode = nodes.FindByPredicate([navLocation](UInfluenceMapNode*& item)
 				{
 					return item->GetCoordinates() == navLocation;
 				});
-				//If the location on the nav mesh lines up with the expected location:
 				if (neighbourNode)
 				{
 					//Get the length of path between the two points:

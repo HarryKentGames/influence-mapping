@@ -12,7 +12,7 @@ void AInfluenceMapAIController::BeginPlay()
 void AInfluenceMapAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    UInfluenceMapNode* currentNode = propagator->currentNode;
+    UInfluenceMapNode* currentNode = propagator->GetCurrentNode();
     if (currentNode == nullptr)
     {
         return;
@@ -21,7 +21,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
     if (aiSettings->behaviour == Behaviour::Follow)
     {
         std::vector<int> usableIndices = std::vector<int>();
-        propagator->influenceMapController->GetPropagatorEnemyInfluenceMap(propagator, currentInfluenceMap);
+        propagator->GetInfluenceMapController()->GetPropagatorEnemyInfluenceMap(propagator, currentInfluenceMap);
         //If the agent is out of range of its enemy:
         if (currentNode->GetIndex() < currentInfluenceMap.size() && currentInfluenceMap[currentNode->GetIndex()] < 0.9f && atLocation)
         {
@@ -34,7 +34,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
                 }
             }
             //Move to a random point in range:
-            TArray<UInfluenceMapNode*> nodes = propagator->influenceMapController->GetNodes();
+            TArray<UInfluenceMapNode*> nodes = propagator->GetInfluenceMapController()->GetNodes();
             FVector location = nodes[usableIndices[rand() % usableIndices.size()]]->GetCoordinates();
             Super::MoveToLocation(location, 20.0f, true, true, true, true);
             atLocation = false;
@@ -43,7 +43,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
     else if (aiSettings->behaviour == Behaviour::Flee)
     {
         std::vector<int> usableIndices = std::vector<int>();
-        propagator->influenceMapController->GetVulnerabilityMap(propagator, currentInfluenceMap);
+        propagator->GetInfluenceMapController()->GetVulnerabilityMap(propagator, currentInfluenceMap);
         //If the agent is in a vulnerable space:
         if (currentNode->GetIndex() < currentInfluenceMap.size() && currentInfluenceMap[currentNode->GetIndex()] > 0.0f && atLocation)
         {
@@ -56,7 +56,7 @@ void AInfluenceMapAIController::Tick(float DeltaTime)
                 }
             }
             //Move to a random point that is not vulnerable:
-            TArray<UInfluenceMapNode*> nodes = propagator->influenceMapController->GetNodes();
+            TArray<UInfluenceMapNode*> nodes = propagator->GetInfluenceMapController()->GetNodes();
             FVector location = nodes[usableIndices[rand() % usableIndices.size()]]->GetCoordinates();
             Super::MoveToLocation(location, 20.0f, true, true, true, true);
             atLocation = false;
