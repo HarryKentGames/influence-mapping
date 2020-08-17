@@ -241,7 +241,7 @@ void UInfluenceMapController::GetTensionMap(UInfluenceMapPropagator* propagator,
 	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
-		influenceMap[i] = allyInfluenceMap[i] + enemyInfluenceMap[i];
+		influenceMap[i] = allyInfluenceMap[i] * enemyInfluenceMap[i];
 	}
 }
 
@@ -265,7 +265,7 @@ void UInfluenceMapController::GetDirectedVulnerabilityMap(UInfluenceMapPropagato
 	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
-		influenceMap[i] = tensionMap[i] + completeInfluenceMap[i];
+		influenceMap[i] = tensionMap[i] * completeInfluenceMap[i];
 	}
 }
 
