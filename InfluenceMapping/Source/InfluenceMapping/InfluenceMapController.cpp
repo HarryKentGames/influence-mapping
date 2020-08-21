@@ -33,7 +33,6 @@ void UInfluenceMapController::TickComponent(float DeltaTime, ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	UpdatePropagators();
-	PropagateInfluences();
 	DebugDraw();
 }
 
@@ -84,18 +83,9 @@ void UInfluenceMapController::InitialiseNodeNetwork()
 
 void UInfluenceMapController::UpdatePropagators()
 {
-	for (UInfluenceMapPropagator* propagator : propagators)
-	{
-		propagator->UpdatePropagator();
-	}
-}
-
-void UInfluenceMapController::PropagateInfluences()
-{
-	for (UInfluenceMapPropagator* propagator : propagators)
-	{
-		propagator->PropagateInfluenceMap();
-	}
+	ParallelFor(propagators.Num(), [&](int32 Idx) {
+		propagators[Idx]->UpdatePropagator();
+	});
 }
 
 void UInfluenceMapController::TargetNewPropagator(int indexOffset)

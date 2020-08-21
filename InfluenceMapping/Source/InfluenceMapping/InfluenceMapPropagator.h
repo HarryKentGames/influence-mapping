@@ -33,7 +33,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
 private:
 	UInfluenceMapController* influenceMapController;
 	UInfluenceMapNode* currentNode;
@@ -43,4 +42,5 @@ private:
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<Team> team;
 	std::vector<float> influenceMap;
+	FVector previousLocation;
 };

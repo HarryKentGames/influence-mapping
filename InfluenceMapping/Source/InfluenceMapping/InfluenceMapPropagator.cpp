@@ -3,6 +3,7 @@
 UInfluenceMapPropagator::UInfluenceMapPropagator()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	previousLocation = FVector(INT_MAX, INT_MAX, INT_MAX);
 }
 
 void UInfluenceMapPropagator::BeginPlay()
@@ -37,20 +38,29 @@ void UInfluenceMapPropagator::SetInfluenceMap(std::vector<float> influenceMapToS
 
 void UInfluenceMapPropagator::UpdatePropagator()
 {
+	
 	//Get the location at the feet of the propagator:
 	FVector boundsOrigin = FVector();
 	FVector boundsExtents = FVector();
 	this->GetOwner()->GetActorBounds(true, boundsOrigin, boundsExtents);
 	FVector actorLocation = boundsOrigin;
 	actorLocation.Z = actorLocation.Z - boundsExtents.Z;
-	//Get the closest node to this location, and if it is different to the current node, update the propagators position:
-	UInfluenceMapNode* newNode = influenceMapController->GetClosestNode(actorLocation);
-	if (currentNode != nullptr && newNode != currentNode)
+	if (actorLocation != previousLocation)
 	{
-		influenceMap[currentNode->GetIndex()] = 0.0f;
+		previousLocation = actorLocation;
+		//Get the closest node to this location, and if it is different to the current node, update the propagators position:
+		UInfluenceMapNode* newNode = influenceMapController->GetClosestNode(actorLocation);
+		if (newNode != currentNode)
+		{
+			if (currentNode != nullptr)
+			{
+				influenceMap[currentNode->GetIndex()] = 0.0f;
+			}
+			currentNode = newNode;
+			influenceMap[currentNode->GetIndex()] = 1.0f;
+			PropagateInfluenceMap();
+		}
 	}
-	currentNode = newNode;
-	influenceMap[currentNode->GetIndex()] = 1.0f;
 }
 
 void UInfluenceMapPropagator::PropagateInfluenceMap()
@@ -78,13 +88,13 @@ void UInfluenceMapPropagator::PropagateInfluenceMap()
 			}
 			//Check that the neighbour has not already been visited, with a shorter distance:
 			bool inVisited = visitedNodes.find(neighbour.Key) != visitedNodes.end();
-			if (inVisited && visitedNodes[neighbour.Key] < neighbourDistance)
+			if (inVisited && visitedNodes[neighbour.Key] <= neighbourDistance)
 			{
 				continue;
 			}
 			//Check that the neighbour is not currently known about with a shorter distance:
 			bool inUnvisited = unvisitedNodes.find(neighbour.Key) != unvisitedNodes.end();
-			if (inUnvisited && unvisitedNodes[neighbour.Key] < neighbourDistance)
+			if (inUnvisited && unvisitedNodes[neighbour.Key] <= neighbourDistance)
 			{
 				continue;
 			}

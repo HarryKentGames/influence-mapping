@@ -48,8 +48,6 @@ public:
 	void TargetNewPropagator(int indexOffset);
 	UInfluenceMapNode* GetClosestNode(FVector coordinates) const;
 
-	void PropagateInfluences();
-
 	void NormaliseInfluenceMap(std::vector<float>& influenceMap);
 	void GetPropagatorInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
 	void GetPropagatorAllyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap);
