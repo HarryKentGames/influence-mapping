@@ -117,3 +117,22 @@ Team UInfluenceMapPropagator::GetTeam()
 	return team;
 }
 
+TArray<Team> UInfluenceMapPropagator::GetAlliedTeams()
+{
+	TArray<Team> allyList;
+	for (int i = 0; i < allies.Num(); i++)
+	{
+		allyList.Push(allies[i].GetValue());
+	}
+	return allyList;
+}
+
+TArray<Team> UInfluenceMapPropagator::GetEnemyTeams()
+{
+	TArray<Team> enemyList;
+	for (int i = 0; i < enemies.Num(); i++)
+	{
+		enemyList.Push(enemies[i].GetValue());
+	}
+	return enemyList;
+}

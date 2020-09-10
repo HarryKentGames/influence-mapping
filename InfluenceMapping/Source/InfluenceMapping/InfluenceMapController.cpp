@@ -120,22 +120,22 @@ void UInfluenceMapController::DebugDraw()
 				GetPropagatorInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
 				break;
 			case DebugMapType::PropagatorAlly:
-				GetPropagatorAllyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				GetPropagatorAllyInfluenceMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetAlliedTeams());
 				break;
 			case DebugMapType::PropagatorEnemy:
-				GetPropagatorEnemyInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				GetPropagatorEnemyInfluenceMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetEnemyTeams());
 				break;
 			case DebugMapType::CompleteMap:
-				GetCompleteInfluenceMap(propagators[targetPropagatorIndex], influenceMap);
+				GetCompleteInfluenceMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetAlliedTeams(), propagators[targetPropagatorIndex]->GetEnemyTeams());
 				break;
 			case DebugMapType::TensionMap:
-				GetTensionMap(propagators[targetPropagatorIndex], influenceMap);
+				GetTensionMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetAlliedTeams(), propagators[targetPropagatorIndex]->GetEnemyTeams());
 				break;
 			case DebugMapType::PropagatorVulnerabilityMap:
-				GetVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+				GetVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetAlliedTeams(), propagators[targetPropagatorIndex]->GetEnemyTeams());
 				break;
 			case DebugMapType::PropagatorDirectedVulnerabilityMap:
-				GetDirectedVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap);
+				GetDirectedVulnerabilityMap(propagators[targetPropagatorIndex], influenceMap, propagators[targetPropagatorIndex]->GetAlliedTeams(), propagators[targetPropagatorIndex]->GetEnemyTeams());
 				break;
 		}
 		NormaliseInfluenceMap(influenceMap);
@@ -181,7 +181,7 @@ void UInfluenceMapController::GetPropagatorInfluenceMap(UInfluenceMapPropagator*
 	influenceMap = propagator->GetInfluenceMap();
 }
 
-void UInfluenceMapController::GetPropagatorAllyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+void UInfluenceMapController::GetPropagatorTeamInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
 {
 	for (UInfluenceMapPropagator* p : propagators)
 	{
@@ -196,11 +196,11 @@ void UInfluenceMapController::GetPropagatorAllyInfluenceMap(UInfluenceMapPropaga
 	}
 }
 
-void UInfluenceMapController::GetPropagatorEnemyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap)
+void UInfluenceMapController::GetPropagatorAllyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap, TArray<Team> teamMask)
 {
 	for (UInfluenceMapPropagator* p : propagators)
 	{
-		if (propagator->GetTeam() != p->GetTeam())
+		if (propagator->GetTeam() == p->GetTeam() || teamMask.Contains(p->GetTeam()))
 		{
 			std::vector<float> pInfluenceMap = p->GetInfluenceMap();
 			for (int i = 0; i < influenceMap.size(); i++)
@@ -211,48 +211,63 @@ void UInfluenceMapController::GetPropagatorEnemyInfluenceMap(UInfluenceMapPropag
 	}
 }
 
-void UInfluenceMapController::GetCompleteInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap)
+void UInfluenceMapController::GetPropagatorEnemyInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap, TArray<Team> teamMask)
+{
+	for (UInfluenceMapPropagator* p : propagators)
+	{
+		if (propagator->GetTeam() != p->GetTeam() && teamMask.Contains(p->GetTeam()))
+		{
+			std::vector<float> pInfluenceMap = p->GetInfluenceMap();
+			for (int i = 0; i < influenceMap.size(); i++)
+			{
+				influenceMap[i] += pInfluenceMap[i];
+			}
+		}
+	}
+}
+
+void UInfluenceMapController::GetCompleteInfluenceMap(UInfluenceMapPropagator* propagator, std::vector<float> &influenceMap, TArray<Team> alliedTeamMask, TArray<Team> enemyTeamMask)
 {
 	std::vector<float> allyInfluenceMap = std::vector<float>(influenceMap.size());
-	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap);
+	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap, alliedTeamMask);
 	std::vector<float> enemyInfluenceMap = std::vector<float>(influenceMap.size());
-	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap);
+	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap, enemyTeamMask);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		influenceMap[i] = allyInfluenceMap[i] - enemyInfluenceMap[i];
 	}
 }
 
-void UInfluenceMapController::GetTensionMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+void UInfluenceMapController::GetTensionMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap, TArray<Team> alliedTeamMask, TArray<Team> enemyTeamMask)
 {
 	std::vector<float> allyInfluenceMap = std::vector<float>(influenceMap.size());
-	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap);
+	GetPropagatorAllyInfluenceMap(propagator, allyInfluenceMap, alliedTeamMask);
 	std::vector<float> enemyInfluenceMap = std::vector<float>(influenceMap.size());
-	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap);
+	GetPropagatorEnemyInfluenceMap(propagator, enemyInfluenceMap, enemyTeamMask);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		influenceMap[i] = allyInfluenceMap[i] * enemyInfluenceMap[i];
 	}
 }
 
-void UInfluenceMapController::GetVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+void UInfluenceMapController::GetVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap, TArray<Team> alliedTeamMask, TArray<Team> enemyTeamMask)
 {
 	std::vector<float> tensionMap = std::vector<float>(influenceMap.size());
-	GetTensionMap(propagator, tensionMap);
+	GetTensionMap(propagator, tensionMap, alliedTeamMask, enemyTeamMask);
 	std::vector<float> completeInfluenceMap = std::vector<float>(influenceMap.size());
-	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
+	GetCompleteInfluenceMap(propagator, completeInfluenceMap, alliedTeamMask, enemyTeamMask);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		influenceMap[i] = tensionMap[i] - abs(completeInfluenceMap[i]);
 	}
 }
 
-void UInfluenceMapController::GetDirectedVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap)
+void UInfluenceMapController::GetDirectedVulnerabilityMap(UInfluenceMapPropagator* propagator, std::vector<float>& influenceMap, TArray<Team> alliedTeamMask, TArray<Team> enemyTeamMask)
 {
 	std::vector<float> tensionMap = std::vector<float>(influenceMap.size());
-	GetTensionMap(propagator, tensionMap);
+	GetTensionMap(propagator, tensionMap, alliedTeamMask, enemyTeamMask);
 	std::vector<float> completeInfluenceMap = std::vector<float>(influenceMap.size());
-	GetCompleteInfluenceMap(propagator, completeInfluenceMap);
+	GetCompleteInfluenceMap(propagator, completeInfluenceMap, alliedTeamMask, enemyTeamMask);
 	for (int i = 0; i < influenceMap.size(); i++)
 	{
 		influenceMap[i] = tensionMap[i] * completeInfluenceMap[i];

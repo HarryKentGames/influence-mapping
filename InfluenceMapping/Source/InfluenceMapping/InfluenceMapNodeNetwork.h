@@ -28,6 +28,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float resolution;
 
+	UPROPERTY(VisibleAnywhere)
 	TArray<UInfluenceMapNode*> nodes;
 
 	FVector bottomLeft;

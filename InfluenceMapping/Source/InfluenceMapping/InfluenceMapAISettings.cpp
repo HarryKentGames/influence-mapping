@@ -8,7 +8,11 @@ UInfluenceMapAISettings::UInfluenceMapAISettings()
 void UInfluenceMapAISettings::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (flag != nullptr)
+	{
+		flagPropagator = flag->FindComponentByClass<UInfluenceMapPropagator>();
+	}	
+
 }
 
 void UInfluenceMapAISettings::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

@@ -8,6 +8,7 @@
 UENUM()
 enum Team
 {
+	NoTeam      UMETA(DisplayName = "NoTeam"),
 	Team1     UMETA(DisplayName = "Team1"),
 	Team2      UMETA(DisplayName = "Team2"),
 };
@@ -27,6 +28,8 @@ public:
 	void SetInfluenceMap(std::vector<float> influenceMapToSet);
 	float GetInfluenceRange();
 	Team GetTeam();
+	TArray<Team> GetAlliedTeams();
+	TArray<Team> GetEnemyTeams();
 
 	void UpdatePropagator();
 	void PropagateInfluenceMap();
@@ -41,6 +44,12 @@ private:
 	float influenceRange;
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<Team> team;
+
+	UPROPERTY(EditAnywhere)
+	TArray<TEnumAsByte<Team>> allies;
+	UPROPERTY(EditAnywhere)
+	TArray<TEnumAsByte<Team>> enemies;
+
 	std::vector<float> influenceMap;
 	FVector previousLocation;
 };

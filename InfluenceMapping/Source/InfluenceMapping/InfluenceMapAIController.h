@@ -2,12 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "NavigationSystem.h"
-#include "NavigationPath.h"
 #include "InfluenceMapPropagator.h"
+#include "InfluenceMapAIController.h"
 #include "InfluenceMapAISettings.h"
 #include "InfluenceMapAIController.generated.h"
-
 
 UCLASS()
 class INFLUENCEMAPPING_API AInfluenceMapAIController : public AAIController
@@ -16,11 +14,15 @@ class INFLUENCEMAPPING_API AInfluenceMapAIController : public AAIController
 
 public:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
-private:
+	AActor* actor;
+	TArray<AInfluenceMapAIController*> teamMateControllers;
+
 	UInfluenceMapPropagator* propagator;
 	UInfluenceMapAISettings* aiSettings;
-	bool atLocation;
+	UInfluenceMapNode* locationNode;
+
+	UInfluenceMapNode* FindClosestNode(TArray<UInfluenceMapNode*> nodes, UInfluenceMapNode* currentNode);
+	bool IsTeamMateDealingWithNearbyNode(UInfluenceMapNode* node, TMap<UInfluenceMapPropagator*, UInfluenceMapNode*> teamMateDestinations);
+
 };

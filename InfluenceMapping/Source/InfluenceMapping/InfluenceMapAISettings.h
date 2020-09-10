@@ -2,13 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "InfluenceMapPropagator.h"
 #include "InfluenceMapAISettings.generated.h"
 
 UENUM()
 enum Behaviour
 {
-	Follow     UMETA(DisplayName = "Follow"),
-	Flee      UMETA(DisplayName = "Flee"),
+	Defend     UMETA(DisplayName = "Defend"),
+	Attack      UMETA(DisplayName = "Attack"),
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -18,7 +19,11 @@ class INFLUENCEMAPPING_API UInfluenceMapAISettings : public UActorComponent
 
 public:
 	UPROPERTY(EditAnywhere)
-	TEnumAsByte<Behaviour> behaviour;
+	TArray<APawn*> teamMates;
+
+	UPROPERTY(EditAnywhere)
+	class AActor* flag;
+	UInfluenceMapPropagator* flagPropagator;
 
 	UInfluenceMapAISettings();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
